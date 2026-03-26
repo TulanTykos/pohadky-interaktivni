@@ -321,4 +321,76 @@ function escAttr(s){return String(s).replace(/'/g,'&#39;').replace(/"/g,'&quot;'
 
 function setSpeed(s){
   readSpeed=s;
-  document.querySelectorAll('.sp
+  document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
+  const map={0.7:'speed-slow',0.9:'speed-normal',1.2:'speed-fast'};
+  if(map[s])document.getElementById(map[s]).classList.add('active');
+  if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();resetReadBtn()}
+}
+
+function toggleRead(){
+  if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();resetReadBtn();return}
+  const allText=Array.from(document.querySelectorAll('.story-title,.story-text')).map(el=>el.innerText).join(' ');
+  if(!allText)return;
+  const utt=new SpeechSynthesisUtterance(allText);
+  utt.lang='cs-CZ';utt.rate=readSpeed;utt.pitch=1.1;
+  const trySpeak=()=>{
+    const voices=window.speechSynthesis.getVoices();
+    const czVoice=voices.find(v=>v.lang==='cs-CZ')||voices.find(v=>v.lang.startsWith('cs'));
+    if(czVoice)utt.voice=czVoice;
+    utt.onend=resetReadBtn;utt.onerror=resetReadBtn;
+    window.speechSynthesis.speak(utt);
+  };
+  const voices=window.speechSynthesis.getVoices();
+  if(voices.length===0){window.speechSynthesis.onvoiceschanged=()=>{window.speechSynthesis.onvoiceschanged=null;trySpeak()}}
+  else{trySpeak()}
+  document.getElementById('readIcon').innerHTML='&#9646;&#9646;';
+  document.getElementById('readLabel').textContent='Zastavit cteni';
+  document.getElementById('readBtn').classList.add('reading');
+}
+
+function resetReadBtn(){
+  document.getElementById('readIcon').innerHTML='&#9654;';
+  document.getElementById('readLabel').textContent='Precist pohadku';
+  document.getElementById('readBtn').classList.remove('reading');
+}
+
+function resetAll(){
+  window.speechSynthesis.cancel();
+  document.querySelectorAll('.card.selected').forEach(c=>c.classList.remove('selected'));
+  for(const k of Object.keys(selected))selected[k]=[];
+  updateSummary();
+  document.getElementById('storyBox').classList.remove('visible');
+  document.getElementById('audioControls').style.display='none';
+  document.getElementById('storyContent').innerHTML='';
+  resetReadBtn();
+  storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:''};
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function createStars(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<80;i++){
+    const s=document.createElement('div');const sz=Math.random()*2.5+.5;
+    s.className='star';
+    s.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;--dur:'+(2+Math.random()*3)+'s;--delay:-'+Math.random()*5+'s';
+    c.appendChild(s);
+  }
+}
+
+function spawnConfetti(){
+  const colors=['#f0c040','#e84393','#00c9b1','#a78bfa','#fff'];
+  const st=document.createElement('style');
+  st.textContent='@keyframes fall{to{transform:translateY('+(window.innerHeight+50)+'px) rotate(720deg);opacity:0}}';
+  document.head.appendChild(st);
+  for(let i=0;i<35;i++){
+    const p=document.createElement('div');const sz=Math.random()*8+4;
+    p.style.cssText='position:fixed;left:'+Math.random()*100+'%;top:-10px;z-index:999;width:'+sz+'px;height:'+sz+'px;background:'+colors[Math.floor(Math.random()*colors.length)]+';border-radius:'+(Math.random()>.5?'50%':'2px')+';animation:fall '+(1.5+Math.random()*2)+'s ease-in forwards;animation-delay:'+Math.random()*.5+'s';
+    document.body.appendChild(p);setTimeout(()=>p.remove(),4000);
+  }
+}
+
+createStars();
+buildCards();
+</script>
+</body>
+</html>
