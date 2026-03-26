@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pohadkovy Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#f0c040;--gold-dark:#c8960a;--deep:#1a0a2e;--pink:#e84393;
+    --teal:#00c9b1;--cream:#fdf6e3;--card-bg:rgba(255,255,255,0.07);
+    --card-border:rgba(240,192,64,0.3);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:var(--deep);background-image:radial-gradient(ellipse at 20% 20%,#2d1b69 0%,transparent 55%),radial-gradient(ellipse at 80% 80%,#1a0a2e 0%,transparent 55%),radial-gradient(ellipse at 60% 10%,rgba(232,67,147,.15) 0%,transparent 40%);font-family:'Lora',serif;color:var(--cream);overflow-x:hidden}
+  .stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .star{position:absolute;background:white;border-radius:50%;animation:twinkle var(--dur) ease-in-out infinite var(--delay)}
+  @keyframes twinkle{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+  .container{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:2rem 1.5rem 4rem}
+  header{text-align:center;padding:2.5rem 0 2rem}
+  .title-main{font-family:'Cinzel Decorative',cursive;font-size:clamp(1.8rem,5vw,3.2rem);color:var(--gold);text-shadow:0 0 30px rgba(240,192,64,.6),0 2px 4px rgba(0,0,0,.8);line-height:1.2}
+  .title-sub{font-size:1.05rem;color:rgba(253,246,227,.7);margin-top:.6rem;font-style:italic}
+  .magic-line{width:200px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:1.2rem auto 0}
+  .step-label{font-family:'Cinzel Decorative',cursive;font-size:.85rem;color:var(--gold);letter-spacing:.1em;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+  .step-label::before,.step-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dark))}
+  .step-label::after{background:linear-gradient(90deg,var(--gold-dark),transparent)}
+  .category{margin-bottom:2.5rem}
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.9rem}
+  .card{background:var(--card-bg);border:2px solid var(--card-border);border-radius:16px;padding:.8rem .5rem;cursor:pointer;transition:all .25s ease;text-align:center;position:relative;overflow:hidden;user-select:none;backdrop-filter:blur(4px)}
+  .card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(240,192,64,.15),transparent 70%);opacity:0;transition:opacity .25s}
+  .card:hover{transform:translateY(-4px) scale(1.04);border-color:rgba(240,192,64,.6)}
+  .card:hover::before{opacity:1}
+  .card.selected{border-color:var(--gold);background:rgba(240,192,64,.18);transform:translateY(-4px) scale(1.06);box-shadow:0 0 20px rgba(240,192,64,.4),0 8px 24px rgba(0,0,0,.4)}
+  .card.selected::before{opacity:1}
+  .card-emoji{font-size:2.6rem;line-height:1;display:block;margin-bottom:.4rem}
+  .card-label{font-size:.72rem;color:rgba(253,246,227,.85);line-height:1.3}
+  .card.selected .card-label{color:var(--gold);font-weight:600}
+  .check-badge{position:absolute;top:5px;right:5px;width:18px;height:18px;background:var(--gold);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:.6rem;color:var(--deep);font-weight:bold}
+  .card.selected .check-badge{display:flex}
+  .selected-summary{background:rgba(255,255,255,.04);border:1px solid var(--card-border);border-radius:14px;padding:1rem 1.2rem;margin:0 0 2rem;min-height:56px;display:flex;align-items:center;flex-wrap:wrap;gap:.5rem}
+  .summary-label{font-size:.8rem;color:rgba(253,246,227,.5);font-style:italic;margin-right:.4rem}
+  .tag{background:rgba(240,192,64,.2);border:1px solid rgba(240,192,64,.4);border-radius:20px;padding:.25rem .7rem;font-size:.78rem;color:var(--gold)}
+  .generate-btn{display:block;margin:0 auto 2.5rem;padding:1rem 3rem;font-family:'Cinzel Decorative',cursive;font-size:1.1rem;color:var(--deep);background:linear-gradient(135deg,var(--gold),#ffda70,var(--gold-dark));border:none;border-radius:50px;cursor:pointer;box-shadow:0 4px 30px rgba(240,192,64,.5),0 2px 8px rgba(0,0,0,.4);transition:all .3s ease;position:relative;overflow:hidden}
+  .generate-btn:hover{transform:translateY(-3px) scale(1.04)}
+  .generate-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .story-box{background:linear-gradient(160deg,rgba(45,27,105,.6),rgba(26,10,46,.8));border:1px solid rgba(240,192,64,.4);border-radius:20px;padding:2.5rem;position:relative;display:none;animation:fadeInUp .6s ease}
+  .story-box.visible{display:block}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+  .story-box::before{content:'Pohadka';position:absolute;top:-.75rem;left:50%;transform:translateX(-50%);background:var(--deep);padding:0 1rem;font-family:'Cinzel Decorative',cursive;font-size:.75rem;color:var(--gold);letter-spacing:.15em;white-space:nowrap}
+  .story-title{font-family:'Cinzel Decorative',cursive;font-size:1.3rem;color:var(--gold);text-align:center;margin-bottom:1.5rem;line-height:1.4}
+  .story-text{line-height:1.9;font-size:1.02rem;color:var(--cream);margin-bottom:1.5rem}
+  .story-text p{margin-bottom:1em}
+  .choice-box{background:rgba(240,192,64,.07);border:1px solid rgba(240,192,64,.3);border-radius:16px;padding:1.4rem 1.2rem;margin:1.2rem 0;animation:fadeInUp .4s ease}
+  .choice-question{font-family:'Cinzel Decorative',cursive;font-size:.95rem;color:var(--gold);text-align:center;margin-bottom:1rem;line-height:1.5}
+  .choice-btns{display:flex;flex-direction:column;gap:.7rem}
+  .choice-btn{background:rgba(255,255,255,.06);border:2px solid rgba(240,192,64,.3);border-radius:12px;padding:.8rem 1.2rem;cursor:pointer;font-family:'Lora',serif;font-size:.95rem;color:var(--cream);text-align:left;transition:all .2s;line-height:1.4}
+  .choice-btn:hover{border-color:var(--gold);background:rgba(240,192,64,.15);transform:translateX(4px)}
+  .choice-btn.chosen{border-color:var(--teal);background:rgba(0,201,177,.15);color:var(--teal);cursor:default;transform:none}
+  .loading-dots{display:flex;justify-content:center;gap:.5rem;padding:1.5rem 0}
+  .dot{width:10px;height:10px;background:var(--gold);border-radius:50%;animation:bounce 1.2s ease-in-out infinite}
+  .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+  @keyframes bounce{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1.2);opacity:1}}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .pouceni{background:rgba(240,192,64,.1);border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:1rem 1.2rem;margin-top:1.5rem;font-style:italic;color:var(--gold)}
+  .audio-controls{display:flex;flex-direction:column;align-items:center;gap:.8rem;margin-top:1.8rem}
+  .read-btn{padding:.75rem 2.2rem;font-family:'Cinzel Decorative',cursive;font-size:.9rem;color:var(--deep);background:linear-gradient(135deg,var(--teal),#00a896);border:none;border-radius:50px;cursor:pointer;box-shadow:0 4px 20px rgba(0,201,177,.4);transition:all .3s ease;display:flex;align-items:center;gap:.6rem}
+  .read-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(0,201,177,.6)}
+  .read-btn.reading{background:linear-gradient(135deg,#e84393,#c0306e);box-shadow:0 4px 20px rgba(232,67,147,.5)}
+  .speed-controls{display:flex;align-items:center;gap:.6rem;font-size:.78rem;color:rgba(253,246,227,.5)}
+  .speed-btn{background:rgba(255,255,255,.06);border:1px solid rgba(240,192,64,.25);color:rgba(253,246,227,.6);padding:.25rem .65rem;border-radius:20px;cursor:pointer;font-size:.75rem;transition:all .2s}
+  .speed-btn:hover,.speed-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(240,192,64,.1)}
+  .reset-btn{background:transparent;border:1px solid rgba(240,192,64,.4);color:rgba(253,246,227,.6);padding:.5rem 1.5rem;border-radius:30px;cursor:pointer;font-family:'Lora',serif;font-size:.85rem;transition:all .2s}
+  .reset-btn:hover{color:var(--gold);border-color:var(--gold)}
+  @media(max-width:600px){.cards-grid{grid-template-columns:repeat(auto-fill,minmax(85px,1fr));gap:.7rem}.card-emoji{font-size:2rem}.story-box{padding:1.8rem 1.2rem}.choice-btns{gap:.5rem}}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="container">
+  <header>
+    <div class="title-main">Pohadkovy Generator</div>
+    <div class="title-sub">Klikni na obrazky a ja ti vymyslim pohadku!</div>
+    <div class="magic-line"></div>
+  </header>
+  <div class="category"><div class="step-label">Postavy</div><div class="cards-grid" id="grid-postavy"></div></div>
+  <div class="category"><div class="step-label">Misto</div><div class="cards-grid" id="grid-mista"></div></div>
+  <div class="category"><div class="step-label">Kouzelne veci</div><div class="cards-grid" id="grid-predmety"></div></div>
+  <div class="category"><div class="step-label">Jak to dopadne?</div><div class="cards-grid" id="grid-nalada"></div></div>
+  <div class="selected-summary" id="summary">
+    <span class="summary-label">Vybrane:</span>
+    <span id="summary-empty" style="font-size:.8rem;color:rgba(253,246,227,.35);font-style:italic">zatim nic...</span>
+  </div>
+  <button class="generate-btn" id="generateBtn" onclick="startStory()">Vygenerovat pohadku!</button>
+  <div class="story-box" id="storyBox">
+    <div id="storyContent"></div>
+    <div class="audio-controls" id="audioControls" style="display:none">
+      <button class="read-btn" id="readBtn" onclick="toggleRead()">
+        <span id="readIcon">&#9654;</span>
+        <span id="readLabel">Precist pohadku</span>
+      </button>
+      <div class="speed-controls">
+        <span>Rychlost:</span>
+        <button class="speed-btn" onclick="setSpeed(0.7)" id="speed-slow">Pomalu</button>
+        <button class="speed-btn active" onclick="setSpeed(0.9)" id="speed-normal">Normalne</button>
+        <button class="speed-btn" onclick="setSpeed(1.2)" id="speed-fast">Rychle</button>
+      </div>
+      <button class="reset-btn" onclick="resetAll()">Vybrat znovu</button>
+    </div>
+  </div>
+</div>
+<script>
+const categories={
+  postavy:{items:[
+    {emoji:"&#128102;",label:"Lukasek"},
+    {emoji:"&#128103;",label:"Emmicka"},
+    {emoji:"&#128102;",label:"Marta"},
+    {emoji:"&#128118;",label:"Editka"},
+    {emoji:"&#128102;",label:"Premek"},
+    {emoji:"&#128120;",label:"Princezna"},
+    {emoji:"&#129312;",label:"Princ"},
+    {emoji:"&#129497;",label:"Carodej"},
+    {emoji:"&#129498;",label:"Vila"},
+    {emoji:"&#128009;",label:"Drak"},
+    {emoji:"&#129412;",label:"Jednorozec"},
+    {emoji:"&#128058;",label:"Vlk"},
+    {emoji:"&#129100;",label:"Trpaslik"},
+    {emoji:"&#129418;",label:"Liska"},
+    {emoji:"&#129500;",label:"Morska panna"},
+    {emoji:"&#128059;",label:"Medved"},
+    {emoji:"&#128071;",label:"Rytir"},
+    {emoji:"&#129430;",label:"Dinosaurus"}
+  ]},
+  mista:{items:[
+    {emoji:"&#127984;",label:"Hrad"},
+    {emoji:"&#127794;",label:"Les"},
+    {emoji:"&#9968;",  label:"Hora"},
+    {emoji:"&#127754;",label:"More"},
+    {emoji:"&#127969;",label:"Chaloupka"},
+    {emoji:"&#127802;",label:"Kouzelna zahrada"},
+    {emoji:"&#129419;",label:"Louka"},
+    {emoji:"&#127961;",label:"Kralovstvi"},
+    {emoji:"&#127769;",label:"Mesic"},
+    {emoji:"&#127752;",label:"Duha"}
+  ]},
+  predmety:{items:[
+    {emoji:"&#129668;",label:"Kouzelna hulka"},
+    {emoji:"&#128142;",label:"Drahokam"},
+    {emoji:"&#128481;",label:"Mec"},
+    {emoji:"&#127873;",label:"Tajny dar"},
+    {emoji:"&#128220;",label:"Kouzelny svitek"},
+    {emoji:"&#127822;",label:"Kouzelne jablko"},
+    {emoji:"&#128302;",label:"Kristalova koule"},
+    {emoji:"&#11088;", label:"Padajici hvezda"},
+    {emoji:"&#129371;",label:"Lektvar"},
+    {emoji:"&#127926;",label:"Kouzelna pisen"}
+  ]},
+  nalada:{items:[
+    {emoji:"&#128150;",label:"Stastny konec"},
+    {emoji:"&#128514;",label:"Vtipne"},
+    {emoji:"&#128558;",label:"S prekvapenim"},
+    {emoji:"&#127752;",label:"Dobrodruzne"}
+  ]}
+};
+
+const selected={postavy:[],mista:[],predmety:[],nalada:[]};
+let readSpeed=0.9;
+let storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:''};
+
+function buildCards(){
+  for(const[cat,data]of Object.entries(categories)){
+    const grid=document.getElementById('grid-'+cat);
+    data.items.forEach(item=>{
+      const card=document.createElement('div');
+      card.className='card';
+      card.innerHTML='<div class="check-badge">&#10003;</div><span class="card-emoji">'+item.emoji+'</span><div class="card-label">'+item.label+'</div>';
+      card.addEventListener('click',()=>toggleCard(card,cat,item.label));
+      grid.appendChild(card);
+    });
+  }
+}
+
+function toggleCard(card,cat,label){
+  const sel=card.classList.contains('selected');
+  if(sel){card.classList.remove('selected');selected[cat]=selected[cat].filter(l=>l!==label)}
+  else{card.classList.add('selected');selected[cat].push(label)}
+  updateSummary();
+}
+
+function updateSummary(){
+  const el=document.getElementById('summary');
+  const empty=document.getElementById('summary-empty');
+  const all=[...selected.postavy,...selected.mista,...selected.predmety,...selected.nalada];
+  el.querySelectorAll('.tag').forEach(t=>t.remove());
+  if(all.length===0){empty.style.display=''}
+  else{empty.style.display='none';all.forEach(label=>{const tag=document.createElement('span');tag.className='tag';tag.textContent=label;el.appendChild(tag)})}
+}
+
+function showLoading(msg){
+  return '<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><p style="text-align:center;font-style:italic;color:rgba(253,246,227,.6);margin-top:.5rem">'+msg+'</p>';
+}
+
+function formatText(t){
+  return '<p>'+escHtml(t).replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>')+'</p>';
+}
+
+async function startStory(){
+  const all=[...selected.postavy,...selected.mista,...selected.predmety,...selected.nalada];
+  if(all.length===0){alert('Nejdrive vyber aspon jednu vec!');return}
+  storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:''};
+  window.speechSynthesis.cancel();
+  resetReadBtn();
+  const btn=document.getElementById('generateBtn');
+  const storyBox=document.getElementById('storyBox');
+  const storyContent=document.getElementById('storyContent');
+  document.getElementById('audioControls').style.display='none';
+  btn.disabled=true;
+  storyBox.classList.add('visible');
+  storyBox.scrollIntoView({behavior:'smooth',block:'start'});
+  storyContent.innerHTML=showLoading('Zacatek pohadky se pise...');
+  try{
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({postavy:selected.postavy.join(', '),mista:selected.mista.join(', '),predmety:selected.predmety.join(', '),nalada:selected.nalada.join(', ')})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'HTTP '+res.status);
+    storyState.nazev=data.nazev||'';
+    storyState.text1=data.text1||'';
+    renderFaze1(data);
+  }catch(err){
+    storyContent.innerHTML='<p style="color:#ff8888">Ouha! Kouzelnik se unavil.</p><p style="color:rgba(255,200,200,.7);font-size:.85rem">'+err.message+'</p>';
+  }
+  btn.disabled=false;
+}
+
+function renderFaze1(data){
+  const storyContent=document.getElementById('storyContent');
+  storyContent.innerHTML=
+    '<div class="story-title">'+escHtml(data.nazev)+'</div>'+
+    '<div class="story-text">'+formatText(data.text1)+'</div>'+
+    '<div class="choice-box" id="choiceBox1">'+
+      '<div class="choice-question">'+escHtml(data.otazka1)+'</div>'+
+      '<div class="choice-btns">'+
+        '<button class="choice-btn" onclick="pickChoice1(this,\''+escAttr(data.moznost1a)+'\')">'+escHtml(data.moznost1a)+'</button>'+
+        '<button class="choice-btn" onclick="pickChoice1(this,\''+escAttr(data.moznost1b)+'\')">'+escHtml(data.moznost1b)+'</button>'+
+        '<button class="choice-btn" onclick="pickChoice1(this,\''+escAttr(data.moznost1c)+'\')">'+escHtml(data.moznost1c)+'</button>'+
+      '</div>'+
+    '</div>';
+}
+
+async function pickChoice1(btn, volba){
+  storyState.volba1=volba;
+  document.querySelectorAll('#choiceBox1 .choice-btn').forEach(b=>{b.disabled=true;b.classList.remove('chosen')});
+  btn.classList.add('chosen');
+  const cont=document.getElementById('storyContent');
+  const loader=document.createElement('div');
+  loader.id='loader2';
+  loader.innerHTML=showLoading('Pribeh pokracuje...');
+  cont.appendChild(loader);
+  loader.scrollIntoView({behavior:'smooth',block:'start'});
+  try{
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({postavy:selected.postavy.join(', '),mista:selected.mista.join(', '),predmety:selected.predmety.join(', '),nalada:selected.nalada.join(', '),volba1:storyState.volba1})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'HTTP '+res.status);
+    storyState.text2=data.text2||'';
+    document.getElementById('loader2').remove();
+    renderFaze2(data);
+  }catch(err){
+    document.getElementById('loader2').innerHTML='<p style="color:#ff8888">'+err.message+'</p>';
+  }
+}
+
+function renderFaze2(data){
+  const cont=document.getElementById('storyContent');
+  const div=document.createElement('div');
+  div.innerHTML=
+    '<div class="story-text" style="animation:fadeInUp .5s ease">'+formatText(data.text2)+'</div>'+
+    '<div class="choice-box" id="choiceBox2">'+
+      '<div class="choice-question">'+escHtml(data.otazka2)+'</div>'+
+      '<div class="choice-btns">'+
+        '<button class="choice-btn" onclick="pickChoice2(this,\''+escAttr(data.moznost2a)+'\')">'+escHtml(data.moznost2a)+'</button>'+
+        '<button class="choice-btn" onclick="pickChoice2(this,\''+escAttr(data.moznost2b)+'\')">'+escHtml(data.moznost2b)+'</button>'+
+        '<button class="choice-btn" onclick="pickChoice2(this,\''+escAttr(data.moznost2c)+'\')">'+escHtml(data.moznost2c)+'</button>'+
+      '</div>'+
+    '</div>';
+  cont.appendChild(div);
+  div.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function pickChoice2(btn, volba){
+  storyState.volba2=volba;
+  document.querySelectorAll('#choiceBox2 .choice-btn').forEach(b=>{b.disabled=true;b.classList.remove('chosen')});
+  btn.classList.add('chosen');
+  const cont=document.getElementById('storyContent');
+  const loader=document.createElement('div');
+  loader.id='loader3';
+  loader.innerHTML=showLoading('Pohadka se blizi ke konci...');
+  cont.appendChild(loader);
+  loader.scrollIntoView({behavior:'smooth',block:'start'});
+  try{
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({postavy:selected.postavy.join(', '),mista:selected.mista.join(', '),predmety:selected.predmety.join(', '),nalada:selected.nalada.join(', '),volba1:storyState.volba1,volba2:storyState.volba2})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'HTTP '+res.status);
+    storyState.text3=data.text3||'';
+    document.getElementById('loader3').remove();
+    renderFaze3(data);
+  }catch(err){
+    document.getElementById('loader3').innerHTML='<p style="color:#ff8888">'+err.message+'</p>';
+  }
+}
+
+function renderFaze3(data){
+  const cont=document.getElementById('storyContent');
+  const div=document.createElement('div');
+  div.innerHTML='<div class="story-text" style="animation:fadeInUp .5s ease">'+formatText(data.text3)+'</div>';
+  cont.appendChild(div);
+  div.scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('audioControls').style.display='flex';
+  spawnConfetti();
+}
+
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function escAttr(s){return String(s).replace(/'/g,'&#39;').replace(/"/g,'&quot;')}
+
+function setSpeed(s){
+  readSpeed=s;
+  document.querySelectorAll('.sp
