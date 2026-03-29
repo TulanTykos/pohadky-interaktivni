@@ -171,7 +171,12 @@ const categories={
 
 const selected={postavy:[],mista:[],predmety:[],nalada:[]};
 let readSpeed=0.9;
-let storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:''};
+let storyState={
+  nazev:'',text1:'',text2:'',text3:'',
+  volba1:'',volba2:'',
+  otazka1:'',moznosti1:[],
+  otazka2:'',moznosti2:[]
+};
 let lastReadFrom=0;
 
 function buildCards(){
@@ -223,7 +228,7 @@ function apiPayload(extra){
 async function startStory(){
   const all=[...selected.postavy,...selected.mista,...selected.predmety,...selected.nalada];
   if(all.length===0){alert('Nejdrive vyber aspon jednu vec!');return}
-  storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:''};
+  storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:'',otazka1:'',moznosti1:[],otazka2:'',moznosti2:[]};
   lastReadFrom=0;
   window.speechSynthesis.cancel();
   resetReadBtn();
@@ -241,6 +246,8 @@ async function startStory(){
     if(!res.ok)throw new Error(data.error||'HTTP '+res.status);
     storyState.nazev=data.nazev||'';
     storyState.text1=data.text1||'';
+    storyState.otazka1=data.otazka1||'';
+    storyState.moznosti1=[data.moznost1a,data.moznost1b,data.moznost1c].filter(Boolean);
     lastReadFrom=0;
     renderFaze1(data);
     document.getElementById('audioControls').style.display='flex';
@@ -286,6 +293,8 @@ async function pickChoice1(btn,volba){
     const data=await res.json();
     if(!res.ok)throw new Error(data.error||'HTTP '+res.status);
     storyState.text2=data.text2||'';
+    storyState.otazka2=data.otazka2||'';
+    storyState.moznosti2=[data.moznost2a,data.moznost2b,data.moznost2c].filter(Boolean);
     document.getElementById('loader2').remove();
     renderFaze2(data);
   }catch(err){
@@ -348,19 +357,20 @@ function toggleRead(){
   if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();resetReadBtn();return}
 
   const titleEl=document.querySelector('.story-title');
-  const allTexts=[storyState.text1,storyState.text2,storyState.text3].filter(Boolean);
-  if(!titleEl&&allTexts.length===0)return;
-
-  const textsToRead=allTexts.slice(lastReadFrom);
   const parts=[];
 
-  if(lastReadFrom===0&&titleEl){
-    parts.push({text:titleEl.innerText.trim(),pause:true});
+  if(lastReadFrom===0){
+    if(titleEl)parts.push({text:titleEl.innerText.trim(),pause:true});
+    if(storyState.text1)parts.push({text:storyState.text1.trim(),pause:false});
+    if(storyState.otazka1)parts.push({text:storyState.otazka1.trim(),pause:false});
+    storyState.moznosti1.forEach(m=>{if(m)parts.push({text:m.trim(),pause:false})});
+  } else if(lastReadFrom===1){
+    if(storyState.text2)parts.push({text:storyState.text2.trim(),pause:false});
+    if(storyState.otazka2)parts.push({text:storyState.otazka2.trim(),pause:false});
+    storyState.moznosti2.forEach(m=>{if(m)parts.push({text:m.trim(),pause:false})});
+  } else if(lastReadFrom===2){
+    if(storyState.text3)parts.push({text:storyState.text3.trim(),pause:false});
   }
-
-  textsToRead.forEach(t=>{
-    if(t.trim())parts.push({text:t.trim(),pause:false});
-  });
 
   if(parts.length===0)return;
 
@@ -422,7 +432,7 @@ function resetAll(){
   document.getElementById('audioControls').style.display='none';
   document.getElementById('storyContent').innerHTML='';
   resetReadBtn();
-  storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:''};
+  storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:'',otazka1:'',moznosti1:[],otazka2:'',moznosti2:[]};
   lastReadFrom=0;
   window.scrollTo({top:0,behavior:'smooth'});
 }
