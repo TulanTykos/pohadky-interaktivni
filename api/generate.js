@@ -50,12 +50,12 @@ export default async function handler(req) {
   const detiInfo = `Postavy v příběhu jsou POUZE tyto: ${postavy || 'odvážný hrdina'}.
 NIKDY nepřidávej žádné další postavy které nebyly vybrány — žádné babičky, starce, pocestné, lesní bytosti ani jiné vedlejší postavy pokud nejsou v seznamu.
 Pokud se mezi vybranými postavami vyskytují tato jména:
-- Lukášek: živý pětiletý chlapec se zlatými vlasy
-- Emmička: dvouletá holčička s blonďatými vlásky
-- Marta: veselý chlapec s hnědými vlasy
-- Editka: roční miminko s hnědými vlásky
-- Přemek: dvouletý chlapec s hnědými vlasy
-Piš o nich jako o skutečných dětech. Přizpůsob chování věku.`;
+- Lukášek: živý malý chlapec se zlatými vlasy — mluví ve větách, je zvídavý a odvážný
+- Emmička: malinká holčička s blonďatými vlásky — teprve se učí mluvit, říká krátká slůvka
+- Marta: veselý chlapec s hnědými vlasy — kamarádský a hravý
+- Editka: malé miminko s hnědými vlásky — ještě nechodí samo, brouká a směje se
+- Přemek: malý šibalský chlapec s hnědými vlasy — plný energie, říká krátká slova
+Piš o nich jako o skutečných dětech. Přizpůsob chování jejich velikosti a schopnostem. NIKDY nepoužívej přesný věk číslicí — místo toho piš "malý", "malinký", "nemluvně", "batole" a podobně.`;
 
   const jsonPravidla = `DULEZITE PRAVIDLA PRO JSON:
 - Pouzivej POUZE dvojite uvozovky pro klice i hodnoty
