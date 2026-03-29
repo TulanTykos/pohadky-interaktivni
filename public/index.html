@@ -57,8 +57,6 @@
   .choice-btn:hover{border-color:var(--gold);background:rgba(240,192,64,.15);transform:translateX(4px)}
   .choice-btn.chosen{border-color:var(--teal);background:rgba(0,201,177,.15);color:var(--teal);cursor:default;transform:none}
   .choice-btn:disabled{cursor:default}
-
-  /* Pisici ruka loader */
   .writing-loader{display:flex;flex-direction:column;align-items:center;gap:1rem;padding:2rem 0}
   .writing-hand{font-size:2.5rem;animation:writing 1s ease-in-out infinite;transform-origin:bottom center;display:inline-block}
   @keyframes writing{
@@ -69,13 +67,8 @@
     100%{transform:translate(0,0) rotate(-10deg)}
   }
   .writing-line{width:140px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:writingLine 1s ease-in-out infinite}
-  @keyframes writingLine{
-    0%{width:40px;opacity:.4}
-    50%{width:140px;opacity:1}
-    100%{width:40px;opacity:.4}
-  }
+  @keyframes writingLine{0%{width:40px;opacity:.4}50%{width:140px;opacity:1}100%{width:40px;opacity:.4}}
   .writing-msg{font-size:.9rem;font-style:italic;color:rgba(253,246,227,.6);text-align:center}
-
   .audio-controls{display:flex;flex-direction:column;align-items:center;gap:.8rem;margin-top:1.8rem}
   .read-btn{padding:.75rem 2.2rem;font-family:'Cinzel Decorative',cursive;font-size:.9rem;color:var(--deep);background:linear-gradient(135deg,var(--teal),#00a896);border:none;border-radius:50px;cursor:pointer;box-shadow:0 4px 20px rgba(0,201,177,.4);transition:all .3s ease;display:flex;align-items:center;gap:.6rem}
   .read-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(0,201,177,.6)}
@@ -179,6 +172,7 @@ const categories={
 const selected={postavy:[],mista:[],predmety:[],nalada:[]};
 let readSpeed=0.9;
 let storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:''};
+let lastReadFrom=0;
 
 function buildCards(){
   for(const[cat,data]of Object.entries(categories)){
@@ -226,14 +220,11 @@ function apiPayload(extra){
   },extra));
 }
 
-function showAudioControls(){
-  document.getElementById('audioControls').style.display='flex';
-}
-
 async function startStory(){
   const all=[...selected.postavy,...selected.mista,...selected.predmety,...selected.nalada];
   if(all.length===0){alert('Nejdrive vyber aspon jednu vec!');return}
   storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:''};
+  lastReadFrom=0;
   window.speechSynthesis.cancel();
   resetReadBtn();
   const btn=document.getElementById('generateBtn');
@@ -250,8 +241,9 @@ async function startStory(){
     if(!res.ok)throw new Error(data.error||'HTTP '+res.status);
     storyState.nazev=data.nazev||'';
     storyState.text1=data.text1||'';
+    lastReadFrom=0;
     renderFaze1(data);
-    showAudioControls();
+    document.getElementById('audioControls').style.display='flex';
   }catch(err){
     sc.innerHTML='<p style="color:#ff8888">Ouha! Kouzelnik se unavil.</p><p style="color:rgba(255,200,200,.7);font-size:.85rem">'+escHtml(err.message)+'</p>';
   }
@@ -281,6 +273,8 @@ async function pickChoice1(btn,volba){
   storyState.volba1=volba;
   document.querySelectorAll('#choiceBtns1 .choice-btn').forEach(b=>{b.disabled=true});
   btn.classList.add('chosen');
+  window.speechSynthesis.cancel();
+  resetReadBtn();
   const cont=document.getElementById('storyContent');
   const loader=document.createElement('div');
   loader.id='loader2';
@@ -314,12 +308,16 @@ function renderFaze2(data){
     '</div>';
   cont.appendChild(div);
   div.scrollIntoView({behavior:'smooth',block:'start'});
+  // Cteni zacne od tohoto noveho textu
+  lastReadFrom=document.querySelectorAll('.story-text').length-1;
 }
 
 async function pickChoice2(btn,volba){
   storyState.volba2=volba;
   document.querySelectorAll('#choiceBtns2 .choice-btn').forEach(b=>{b.disabled=true});
   btn.classList.add('chosen');
+  window.speechSynthesis.cancel();
+  resetReadBtn();
   const cont=document.getElementById('storyContent');
   const loader=document.createElement('div');
   loader.id='loader3';
@@ -344,6 +342,67 @@ function renderFaze3(data){
   div.innerHTML='<div class="story-text" style="animation:fadeInUp .5s ease">'+formatText(data.text3)+'</div>';
   cont.appendChild(div);
   div.scrollIntoView({behavior:'smooth',block:'start'});
+  // Cteni zacne od tohoto noveho textu
+  lastReadFrom=document.querySelectorAll('.story-text').length-1;
+}
+
+function toggleRead(){
+  if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();resetReadBtn();return}
+
+  const titleEl=document.querySelector('.story-title');
+  const textEls=Array.from(document.querySelectorAll('.story-text'));
+  if(!titleEl&&textEls.length===0)return;
+
+  const textsToRead=textEls.slice(lastReadFrom);
+
+  // Sestav casti ke cteni
+  const parts=[];
+  if(lastReadFrom===0&&titleEl){
+    parts.push({text:titleEl.innerText,pause:true});
+  }
+  textsToRead.forEach(el=>{
+    const t=el.innerText.trim();
+    if(t)parts.push({text:t,pause:false});
+  });
+
+  if(parts.length===0)return;
+
+  const trySpeak=()=>{
+    const voices=window.speechSynthesis.getVoices();
+    const czVoice=voices.find(v=>v.lang==='cs-CZ')||voices.find(v=>v.lang.startsWith('cs'));
+    let idx=0;
+    function speakNext(){
+      if(idx>=parts.length){resetReadBtn();return}
+      const part=parts[idx++];
+      const utt=new SpeechSynthesisUtterance(part.text);
+      utt.lang='cs-CZ';
+      utt.rate=readSpeed;
+      utt.pitch=1.1;
+      if(czVoice)utt.voice=czVoice;
+      utt.onend=()=>{
+        if(part.pause){setTimeout(speakNext,1000)}
+        else{speakNext()}
+      };
+      utt.onerror=resetReadBtn;
+      window.speechSynthesis.speak(utt);
+    }
+    speakNext();
+  };
+
+  const voices=window.speechSynthesis.getVoices();
+  if(voices.length===0){
+    window.speechSynthesis.onvoiceschanged=()=>{window.speechSynthesis.onvoiceschanged=null;trySpeak()}
+  }else{trySpeak()}
+
+  document.getElementById('readIcon').innerHTML='&#9646;&#9646;';
+  document.getElementById('readLabel').textContent='Zastavit cteni';
+  document.getElementById('readBtn').classList.add('reading');
+}
+
+function resetReadBtn(){
+  document.getElementById('readIcon').innerHTML='&#9654;';
+  document.getElementById('readLabel').textContent='Precist pohadku';
+  document.getElementById('readBtn').classList.remove('reading');
 }
 
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -357,33 +416,6 @@ function setSpeed(s){
   if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();resetReadBtn()}
 }
 
-function toggleRead(){
-  if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();resetReadBtn();return}
-  const allText=Array.from(document.querySelectorAll('.story-title,.story-text')).map(el=>el.innerText).join(' ');
-  if(!allText)return;
-  const utt=new SpeechSynthesisUtterance(allText);
-  utt.lang='cs-CZ';utt.rate=readSpeed;utt.pitch=1.1;
-  const trySpeak=()=>{
-    const voices=window.speechSynthesis.getVoices();
-    const czVoice=voices.find(v=>v.lang==='cs-CZ')||voices.find(v=>v.lang.startsWith('cs'));
-    if(czVoice)utt.voice=czVoice;
-    utt.onend=resetReadBtn;utt.onerror=resetReadBtn;
-    window.speechSynthesis.speak(utt);
-  };
-  const voices=window.speechSynthesis.getVoices();
-  if(voices.length===0){window.speechSynthesis.onvoiceschanged=()=>{window.speechSynthesis.onvoiceschanged=null;trySpeak()}}
-  else{trySpeak()}
-  document.getElementById('readIcon').innerHTML='&#9646;&#9646;';
-  document.getElementById('readLabel').textContent='Zastavit cteni';
-  document.getElementById('readBtn').classList.add('reading');
-}
-
-function resetReadBtn(){
-  document.getElementById('readIcon').innerHTML='&#9654;';
-  document.getElementById('readLabel').textContent='Precist pohadku';
-  document.getElementById('readBtn').classList.remove('reading');
-}
-
 function resetAll(){
   window.speechSynthesis.cancel();
   document.querySelectorAll('.card.selected').forEach(c=>c.classList.remove('selected'));
@@ -394,6 +426,7 @@ function resetAll(){
   document.getElementById('storyContent').innerHTML='';
   resetReadBtn();
   storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:''};
+  lastReadFrom=0;
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
