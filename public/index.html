@@ -161,7 +161,7 @@ const categories={
     {emoji:"&#11088;", label:"Padajici hvezda"},
     {emoji:"&#129371;",label:"Lektvar"},
     {emoji:"&#127926;",label:"Kouzelna pisen"},
-    {emoji:"&#10024;",label:"Zlaty snytlik}
+    {emoji:"&#10024;", label:"Zlaty snytlik"}
   ]},
   nalada:{items:[
     {emoji:"&#128150;",label:"Stastny konec"},
@@ -349,108 +349,4 @@ async function pickChoice2(btn,volba){
 function renderFaze3(data){
   const cont=document.getElementById('storyContent');
   const div=document.createElement('div');
-  div.innerHTML='<div class="story-text" style="animation:fadeInUp .5s ease">'+formatText(data.text3)+'</div>';
-  cont.appendChild(div);
-  lastReadFrom=2;
-  div.scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function toggleRead(){
-  if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();resetReadBtn();return}
-
-  const titleEl=document.querySelector('.story-title');
-  const parts=[];
-
-  if(lastReadFrom===0){
-    if(titleEl)parts.push({text:titleEl.innerText.trim(),pause:true});
-    if(storyState.text1)parts.push({text:storyState.text1.trim(),pause:false});
-    if(storyState.otazka1)parts.push({text:storyState.otazka1.trim(),pause:false});
-    storyState.moznosti1.forEach(m=>{if(m)parts.push({text:m.trim(),pause:false})});
-  } else if(lastReadFrom===1){
-    if(storyState.text2)parts.push({text:storyState.text2.trim(),pause:false});
-    if(storyState.otazka2)parts.push({text:storyState.otazka2.trim(),pause:false});
-    storyState.moznosti2.forEach(m=>{if(m)parts.push({text:m.trim(),pause:false})});
-  } else if(lastReadFrom===2){
-    if(storyState.text3)parts.push({text:storyState.text3.trim(),pause:false});
-  }
-
-  if(parts.length===0)return;
-
-  const trySpeak=()=>{
-    const voices=window.speechSynthesis.getVoices();
-    const czVoice=voices.find(v=>v.lang==='cs-CZ')||voices.find(v=>v.lang.startsWith('cs'));
-    let idx=0;
-    function speakNext(){
-      if(idx>=parts.length){resetReadBtn();return}
-      const part=parts[idx++];
-      const utt=new SpeechSynthesisUtterance(part.text);
-      utt.lang='cs-CZ';
-      utt.rate=readSpeed;
-      utt.pitch=1.1;
-      if(czVoice)utt.voice=czVoice;
-      utt.onend=()=>{
-        if(part.pause){setTimeout(speakNext,1000)}
-        else{speakNext()}
-      };
-      utt.onerror=resetReadBtn;
-      window.speechSynthesis.speak(utt);
-    }
-    speakNext();
-  };
-
-  const voices=window.speechSynthesis.getVoices();
-  if(voices.length===0){
-    window.speechSynthesis.onvoiceschanged=()=>{window.speechSynthesis.onvoiceschanged=null;trySpeak()}
-  }else{trySpeak()}
-
-  document.getElementById('readIcon').innerHTML='&#9646;&#9646;';
-  document.getElementById('readLabel').textContent='Zastavit cteni';
-  document.getElementById('readBtn').classList.add('reading');
-}
-
-function resetReadBtn(){
-  document.getElementById('readIcon').innerHTML='&#9654;';
-  document.getElementById('readLabel').textContent='Precist pohadku';
-  document.getElementById('readBtn').classList.remove('reading');
-}
-
-function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function escAttr(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}
-
-function setSpeed(s){
-  readSpeed=s;
-  document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
-  const map={0.7:'speed-slow',0.9:'speed-normal',1.2:'speed-fast'};
-  if(map[s])document.getElementById(map[s]).classList.add('active');
-  if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();resetReadBtn()}
-}
-
-function resetAll(){
-  window.speechSynthesis.cancel();
-  document.querySelectorAll('.card.selected').forEach(c=>c.classList.remove('selected'));
-  for(const k of Object.keys(selected))selected[k]=[];
-  updateSummary();
-  document.getElementById('storyBox').classList.remove('visible');
-  document.getElementById('audioControls').style.display='none';
-  document.getElementById('storyContent').innerHTML='';
-  resetReadBtn();
-  storyState={nazev:'',text1:'',text2:'',text3:'',volba1:'',volba2:'',otazka1:'',moznosti1:[],otazka2:'',moznosti2:[]};
-  lastReadFrom=0;
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function createStars(){
-  const c=document.getElementById('stars');
-  for(let i=0;i<80;i++){
-    const s=document.createElement('div');const sz=Math.random()*2.5+.5;
-    s.className='star';
-    s.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;--dur:'+(2+Math.random()*3)+'s;--delay:-'+Math.random()*5+'s';
-    c.appendChild(s);
-  }
-}
-
-createStars();
-buildCards();
-</script>
-</body>
-</html>
+  div.innerHTML='<div class="story-text" style="animation:fadeInUp .5s ease">'+formatTex
