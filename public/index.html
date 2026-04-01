@@ -102,7 +102,7 @@
     <div id="storyContent"></div>
     <div class="audio-controls" id="audioControls" style="display:none">
       <button class="read-btn" id="readBtn" onclick="toggleRead()">
-        <span id="readIcon">&#9654;</span>
+        <span id="readIcon">▶</span>
         <span id="readLabel">Precist pohadku</span>
       </button>
       <div class="speed-controls">
@@ -118,54 +118,56 @@
 <script>
 const categories={
   postavy:{items:[
-    {emoji:"&#128102;",label:"Lukasek"},
-    {emoji:"&#128103;",label:"Emmicka"},
-    {emoji:"&#128102;",label:"Marta"},
-    {emoji:"&#128118;",label:"Editka"},
-    {emoji:"&#128102;",label:"Premek"},
-    {emoji:"&#128120;",label:"Princezna"},
-    {emoji:"&#129312;",label:"Princ"},
-    {emoji:"&#129497;",label:"Carodej"},
-    {emoji:"&#129498;",label:"Vila"},
-    {emoji:"&#128009;",label:"Drak"},
-    {emoji:"&#129412;",label:"Jednorozec"},
-    {emoji:"&#128058;",label:"Vlk"},
-    {emoji:"&#129100;",label:"Trpaslik"},
-    {emoji:"&#129418;",label:"Liska"},
-    {emoji:"&#129500;",label:"Morska panna"},
-    {emoji:"&#128059;",label:"Medved"},
-    {emoji:"&#128071;",label:"Rytir"},
-    {emoji:"&#129430;",label:"Dinosaurus"}
+    {emoji:"👦", label:"Lukasek"},
+    {emoji:"👧", label:"Emmicka"},
+    {emoji:"👦", label:"Marta"},
+    {emoji:"👶", label:"Editka"},
+    {emoji:"👦", label:"Premek"},
+    {emoji:"👸", label:"Princezna"},
+    {emoji:"🤴", label:"Princ"},
+    {emoji:"🧙", label:"Carodej"},
+    {emoji:"🧚", label:"Vila"},
+    {emoji:"🐉", label:"Drak"},
+    {emoji:"🦄", label:"Jednorozec"},
+    {emoji:"🐺", label:"Vlk"},
+    {emoji:"🧌", label:"Trpaslik"},
+    {emoji:"🦊", label:"Liska"},
+    {emoji:"🧜", label:"Morska panna"},
+    {emoji:"🐻", label:"Medved"},
+    {emoji:"🏇", label:"Rytir"},
+    {emoji:"🦕", label:"Dinosaurus"},
+    {emoji:"🌸", label:"Ozivla kvetina"}
   ]},
   mista:{items:[
-    {emoji:"&#127984;",label:"Hrad"},
-    {emoji:"&#127794;",label:"Les"},
-    {emoji:"&#9968;",  label:"Hora"},
-    {emoji:"&#127754;",label:"More"},
-    {emoji:"&#127969;",label:"Chaloupka"},
-    {emoji:"&#127802;",label:"Kouzelna zahrada"},
-    {emoji:"&#129419;",label:"Louka"},
-    {emoji:"&#127961;",label:"Kralovstvi"},
-    {emoji:"&#127769;",label:"Mesic"},
-    {emoji:"&#127752;",label:"Duha"}
+    {emoji:"🏰", label:"Hrad"},
+    {emoji:"🌲", label:"Les"},
+    {emoji:"⛰️", label:"Hora"},
+    {emoji:"🌊", label:"More"},
+    {emoji:"🏡", label:"Chaloupka"},
+    {emoji:"🌺", label:"Kouzelna zahrada"},
+    {emoji:"🦋", label:"Louka"},
+    {emoji:"🏙️", label:"Kralovstvi"},
+    {emoji:"🌙", label:"Mesic"},
+    {emoji:"🌈", label:"Duha"}
   ]},
   predmety:{items:[
-    {emoji:"&#129668;",label:"Kouzelna hulka"},
-    {emoji:"&#128142;",label:"Drahokam"},
-    {emoji:"&#128481;",label:"Mec"},
-    {emoji:"&#127873;",label:"Tajny dar"},
-    {emoji:"&#128220;",label:"Kouzelny svitek"},
-    {emoji:"&#127822;",label:"Kouzelne jablko"},
-    {emoji:"&#128302;",label:"Kristalova koule"},
-    {emoji:"&#11088;", label:"Padajici hvezda"},
-    {emoji:"&#129371;",label:"Lektvar"},
-    {emoji:"&#127926;",label:"Kouzelna pisen"}
+    {emoji:"🪄", label:"Kouzelna hulka"},
+    {emoji:"💎", label:"Drahokam"},
+    {emoji:"🗡️", label:"Mec"},
+    {emoji:"🎁", label:"Tajny dar"},
+    {emoji:"📜", label:"Kouzelny svitek"},
+    {emoji:"🍎", label:"Kouzelne jablko"},
+    {emoji:"🔮", label:"Kristalova koule"},
+    {emoji:"🌟", label:"Padajici hvezda"},
+    {emoji:"🫙", label:"Lektvar"},
+    {emoji:"🎶", label:"Kouzelna pisen"},
+    {emoji:"✨", label:"Zlaty snytlik"}
   ]},
   nalada:{items:[
-    {emoji:"&#128150;",label:"Stastny konec"},
-    {emoji:"&#128514;",label:"Vtipne"},
-    {emoji:"&#128558;",label:"S prekvapenim"},
-    {emoji:"&#127752;",label:"Dobrodruzne"}
+    {emoji:"💖", label:"Stastny konec"},
+    {emoji:"😂", label:"Vtipne"},
+    {emoji:"😮", label:"S prekvapenim"},
+    {emoji:"🌈", label:"Dobrodruzne"}
   ]}
 };
 
@@ -185,7 +187,7 @@ function buildCards(){
     data.items.forEach(item=>{
       const card=document.createElement('div');
       card.className='card';
-      card.innerHTML='<div class="check-badge">&#10003;</div><span class="card-emoji">'+item.emoji+'</span><div class="card-label">'+item.label+'</div>';
+      card.innerHTML='<div class="check-badge">✓</div><span class="card-emoji">'+item.emoji+'</span><div class="card-label">'+item.label+'</div>';
       card.addEventListener('click',()=>toggleCard(card,cat,item.label));
       grid.appendChild(card);
     });
@@ -209,7 +211,7 @@ function updateSummary(){
 }
 
 function writingLoader(msg){
-  return '<div class="writing-loader"><div class="writing-hand">&#9997;</div><div class="writing-line"></div><div class="writing-msg">'+msg+'</div></div>';
+  return '<div class="writing-loader"><div class="writing-hand">✍️</div><div class="writing-line"></div><div class="writing-msg">'+msg+'</div></div>';
 }
 
 function formatText(t){
@@ -350,4 +352,10 @@ function renderFaze3(data){
   div.innerHTML='<div class="story-text" style="animation:fadeInUp .5s ease">'+formatText(data.text3)+'</div>';
   cont.appendChild(div);
   lastReadFrom=2;
-  div.scrollIntoView({behavi
+  div.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function toggleRead(){
+  if(window.speechSynthesis.speaking){window.speechSynthesis.cancel();resetReadBtn();return}
+
+  const titleEl=document.querySelecto
